@@ -11,17 +11,14 @@ def get_cap(video_source_path_or_cap):
     if input is a path to a video, returns a cv2.VideoCapture object
     if input is a cv2.VideoCapture, returns the input
 
-    _extended_summary_
-
     Parameters
     ----------
-    video_source_path_or_cap : _type_
-        _description_
+    video_source_path_or_cap : string (path to the video) or capture object
+        where to find the video
 
     Returns
     -------
-    _type_
-        _description_
+    capture object
 
     Raises
     ------

@@ -10,23 +10,52 @@ note:
 use save_video if the output is None but saves a video
 use save_frames if the output is None but saves a series of frames
 use get_frame if the output is a frame
+
+# .mov format for fourcc = cv2.VideoWriter_fourcc('M','J','P','G') 
 """
-
-
 
 def save_video_write_frame_num_and_time(video_source_path_or_cap, video_dest_path, 
                                     fps = -1, 
                                     timestamp_list = None, 
-                                    string_format = 'frame: {:05d} time: {:03.3f}',
+                                    string_fmt = 'frame: {:05d} time: {:03.3f}',
                                     origin = (20, 20),
                                     font = cv2.FONT_HERSHEY_SIMPLEX,
                                     fontScale = 1, 
                                     color = (255, 255, 255),
                                     thickness = 1):
+    '''
+    Save a video in a given path writing on each frame information 
+    about the number of frame and the elapsed time
+
+    Parameters
+    ----------
+    video_source_path_or_cap : string (path to the video) or capture object
+        where to find the video
+    video_dest_path : string (path to the video)
+        where to save the video
+    fps : int, optional
+        fps to record the output video.
+        By default -1, which means the fps of the original video are used
+    timestamp_list : list, optional
+        list containing the elapsed time with respect to time 0 of each frame.
+        By default None, which means the elapsed time is taken from fps and not from the list
+    string_fmt : str, optional
+        format of the string that is written on the frames, by default 'frame: {:05d} time: {:03.3f}'
+    origin : tuple of 2 int, optional
+        position of the origin (x, y) of the text, by default (20, 20)
+    font : _type_, optional
+        _description_, by default cv2.FONT_HERSHEY_SIMPLEX
+    fontScale : int, optional
+        _description_, by default 1
+    color : tuple, optional
+        _description_, by default (255, 255, 255)
+    thickness : int, optional
+        _description_, by default 1
+    '''
     cap = general.get_cap(video_source_path_or_cap)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    if timestamp_list:
+    if not timestamp_list is None:
         assert len(timestamp_list) == total_frames, (
             'len(timestamp_list) is {} while video has {} frames'.format(len(timestamp_list), total_frames))
         
@@ -44,11 +73,11 @@ def save_video_write_frame_num_and_time(video_source_path_or_cap, video_dest_pat
                     videoWriter = cv2.VideoWriter(video_dest_path, fourcc, fps, (w,h))
                     video_writer_initialized = True
             try:
-                if timestamp_list:
+                if not timestamp_list is None:
                     timestamp = timestamp_list[i]
                 else:
                     timestamp = i / fps 
-                stringForImage =  string_format.format(i, timestamp)
+                stringForImage =  string_fmt.format(i, timestamp)
                 imgForVideo = cv2.putText(frame, stringForImage, origin, font, fontScale, color, thickness, cv2.LINE_AA)
                 videoWriter.write(imgForVideo)
             except:
@@ -63,7 +92,23 @@ def save_video_write_frame_num_and_time(video_source_path_or_cap, video_dest_pat
 def save_video_from_start_frame_to_end_frame(video_source_path_or_cap, video_dest_path, 
                                              start_frame = 0, end_frame = -1,
                                              fps = -1):
-    # .mov format for fourcc = cv2.VideoWriter_fourcc('M','J','P','G') 
+    '''
+    Save video in a given path from start frame to end frame
+
+    Parameters
+    ----------
+    video_source_path_or_cap : string (path to the video) or capture object
+        where to find the video
+    video_dest_path : string (path to the video)
+        where to save the video
+    start_frame : int, optional
+        by default 0
+    end_frame : int, optional
+        by default -1, corresponds to the last frame
+    fps : int, optional
+        fps to record the output video.
+        By default -1, which means the fps of the original video are used
+    '''
     cap = general.get_cap(video_source_path_or_cap)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
@@ -86,7 +131,6 @@ def save_video_from_start_frame_to_end_frame(video_source_path_or_cap, video_des
                     videoWriter = cv2.VideoWriter(video_dest_path, fourcc, fps, (w,h))
                     video_writer_initialized = True
             try:
-                timestamp = i / fps 
                 videoWriter.write(frame)
             except:
                 print('error occurred in the loop at frame {}'.format(i+start_frame))
@@ -97,13 +141,37 @@ def save_video_from_start_frame_to_end_frame(video_source_path_or_cap, video_des
     cap.release()
     videoWriter.release()
     
-def save_video_from_folder_of_frames(dir_complete_path, video_dest_path, fps, write_on_frame = False,
-                                     string_format = 'frame: {:05d} time: {:03.3f}',
+def save_video_from_folder_of_frames(dir_complete_path, video_dest_path, fps, 
+                                     write_on_frame = False,
                                      origin = (20, 20),
                                      font = cv2.FONT_HERSHEY_SIMPLEX,
                                      fontScale = 1, 
                                      color = (255, 255, 255),
                                      thickness = 1):
+    '''
+    Save video in a given path creating a sequence of the frames in a given folder
+
+    Parameters
+    ----------
+    dir_complete_path : string
+        path to the directory containing the frames
+    video_dest_path : string (path to the video)
+        where to save the video
+    fps : int
+        fps the video should be saved
+    write_on_frame : bool, optional
+        if writing on each frame the name of the corresponding image, by default False
+    origin : tuple of 2 int, optional
+        position of the origin (x, y) of the text, by default (20, 20)
+    font : _type_, optional
+        _description_, by default cv2.FONT_HERSHEY_SIMPLEX
+    fontScale : int, optional
+        _description_, by default 1
+    color : tuple, optional
+        _description_, by default (255, 255, 255)
+    thickness : int, optional
+        _description_, by default 1
+    '''
     files_list = __utils__.list_files_in_this_dir(dir_complete_path)
 
     video_writer_initialized = False
@@ -128,7 +196,30 @@ def save_video_from_folder_of_frames(dir_complete_path, video_dest_path, fps, wr
             pass
     videoWriter.release()
 
-def save_frames_from_start_frame_to_end_frame(video_source_path_or_cap, folder_dest_path, start_frame = 0, end_frame = -1, fmt = None):
+def save_frames_from_start_frame_to_end_frame(video_source_path_or_cap, 
+                                              folder_dest_path, start_frame = 0, 
+                                              end_frame = -1, string_fmt = None,
+                                              file_extension = '.png'):
+    '''
+    Save all the frames contained in a video in single images
+
+    Parameters
+    ----------
+    dir_complete_path : string
+        path to the directory containing the frames
+    video_dest_path : string (path to the folder)
+        where to save the single frames
+    start_frame : int, optional
+        by default 0
+    end_frame : int, optional
+        by default -1, corresponds to the last frame
+    string_fmt : string, optional
+        how to format the string to create the name of each file.
+        Should have a '{}' to insert the  frame number
+        by default None, creates the frame num with filename_f{frame_num}
+    file_extension : string, optional
+        extension of the saved frames, by default '.png'
+    '''
     cap = general.get_cap(video_source_path_or_cap)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
@@ -136,14 +227,15 @@ def save_frames_from_start_frame_to_end_frame(video_source_path_or_cap, folder_d
         end_frame = total_frames
     cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
 
-    if not fmt:
-        fmt = 'f{'+':0{}'.format(len(str(end_frame)))+'d}'
+    if not string_fmt:
+        # take into account leading zeros
+        string_fmt = 'f{'+':0{}'.format(len(str(end_frame)))+'d}'
 
     for i in range(end_frame-start_frame):
         ret, frame = cap.read()
         if ret == True:
             try: 
-                cv2.imwrite(os.path.join(folder_dest_path,fmt.format(i+start_frame)+'.png'), frame)
+                cv2.imwrite(os.path.join(folder_dest_path,string_fmt.format(i+start_frame)+file_extension), frame)
             except:
                 print('error occurred in the loop at frame {}'.format(i+start_frame))
                 pass
@@ -154,6 +246,23 @@ def save_frames_from_start_frame_to_end_frame(video_source_path_or_cap, folder_d
 
 
 def get_frame_at_index(video_source_path_or_cap, frame_num):
+    '''
+    Returns the image at a given index of the video
+
+    Parameters
+    ----------
+    dir_complete_path : string
+        path to the directory containing the frames
+    frame_num : int
+        index of the frame
+
+    Returns
+    -------
+    frame or None
+        frame of the video at the given index
+        matrix width*height*3 or matrix width*height*1
+    
+    '''
     cap = general.get_cap(video_source_path_or_cap)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
@@ -166,82 +275,66 @@ def get_frame_at_index(video_source_path_or_cap, frame_num):
         return frame
     else:
         return None
-    
-    
-def function_copy_paste_save_video_with_operations_on_frames(video_source_path_or_cap, video_dest_path, fps = -1, OTHER_PARAMETERS_FOR_YOUR_FUNCTION = None):
-    cap = general.get_cap(video_source_path_or_cap)
-    # cap = video_lib.general.get_cap(video_source_path_or_cap)
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        
-    if fps == -1:
-        fps = cap.get(cv2.CAP_PROP_FPS)
-
-    video_writer_initialized = False
-    for i in range(total_frames):
-        ret, frame = cap.read()
-        if ret == True:
-            if not video_writer_initialized:
-                    h, w = frame.shape[:2]
-                    # fourcc = cv2.VideoWriter_fourcc('X','V','I','D')
-                    fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
-                    videoWriter = cv2.VideoWriter(video_dest_path, fourcc, fps, (w,h))
-                    video_writer_initialized = True
-            try:
-                # write here all the operations on the image
-                # imgForVideo = foo(frame)
-                imgForVideo = frame # cancel this line
-                videoWriter.write(imgForVideo)
-            except:
-                print('error occurred in the loop at iteration {}'.format(i))
-                pass
-        else:
-            print('not recognized frame at iteration {}'.format(i))
-            break
-    cap.release()
-    videoWriter.release()
-
-def function_copy_paste_play_video_with_operations_on_frames(video_source_path_or_cap, video_dest_path, fps = -1, OTHER_PARAMETERS_FOR_YOUR_FUNCTION = None):
-    cap = general.get_cap(video_source_path_or_cap)
-    # cap = video_lib.general.get_cap(video_source_path_or_cap)
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        
-    if fps == -1:
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        
-    for i in range(total_frames):
-        ret, frame = cap.read()
-        if ret == True:
-            try:
-                # write here all the operations on the image
-                # imgForVideo = foo(frame)
-                imgForVideo = frame # cancel this line
-            except:
-                print('error occurred in the loop at iteration {}'.format(i))
-                pass
-        else:
-            print('not recognized frame at iteration {}'.format(i))
-            break
-    cap.release()
 
 
-def record_video(saving_path, source = 0, video_freq = 30, max_frames = 1800, 
+def record_video(saving_folder, source = 0, video_freq = 30, 
+                 ext = '.mov', max_frames = 1800, 
                 max_duration = 60, save_csv = True, display_video = True, 
                 print_execution = True, write_on_frame = True,
-                string_format = 'frame: {:05d} time: {:03.3f}',
+                string_fmt = 'frame: {:05d} time: {:03.3f}',
                 origin = (20, 20), font = cv2.FONT_HERSHEY_SIMPLEX,
                 fontScale = 1, color = (255, 255, 255), thickness = 1):
+    '''
+    Records a video from the specified source, saving it in the path specified 
+    in saving_folder with the name video.ext
+
+    Parameters
+    ----------
+    saving_folder : string
+        path to the folder where the video is saved
+    source : int, optional
+        where to get the video from, by default 0
+    video_freq : int, optional
+        theorical video frequency of frame saving, by default 30
+    ext : string, optional
+        extension of the saved video, by default '.mov'.
+    max_frames : int, optional
+        max number of frames in the video, by default 1800
+    max_duration : int, optional
+        max duratoin of the video in seconds, by default 60
+    save_csv : bool, optional
+        if saving a csv file containg the times of recording of each frame, by default True
+    display_video : bool, optional
+        if displaying the video while recording, by default True
+    print_execution : bool, optional
+        if printing coiunter and elasped time, by default True
+    write_on_frame : bool, optional
+        if writing on the frame, by default True
+    string_fmt : str, optional
+        format of the string that is written on the frames, by default 'frame: {:05d} time: {:03.3f}'
+    origin : tuple of 2 int, optional
+        position of the origin (x, y) of the text, by default (20, 20)
+    font : _type_, optional
+        _description_, by default cv2.FONT_HERSHEY_SIMPLEX
+    fontScale : int, optional
+        _description_, by default 1
+    color : tuple, optional
+        _description_, by default (255, 255, 255)
+    thickness : int, optional
+        _description_, by default 1
+    '''
     # initialize capture
     capture = cv2.VideoCapture(source)
     frame_width = int(capture.get(3))
     frame_height = int(capture.get(4))
-    fourcc = cv2.VideoWriter_fourcc('X','V','I','D')
-    # fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
+    # fourcc = cv2.VideoWriter_fourcc('X','V','I','D')
+    fourcc = cv2.VideoWriter_fourcc('M','J','P','G') 
 
-    saving_path_folder = os.path.join(saving_path,  __utils__.this_moment())
+    saving_path_folder = os.path.join(saving_folder,  __utils__.this_moment())
     os.makedirs(saving_path_folder, exist_ok = True)
 
     # initialize video writer
-    video_saving_path = os.path.join(saving_path_folder, 'video.mp4')
+    video_saving_path = os.path.join(saving_path_folder, 'video'+ext)
     video_writer = cv2.VideoWriter(video_saving_path, fourcc, video_freq, (frame_width, frame_height))  
     
     # initialize csv header
@@ -263,7 +356,7 @@ def record_video(saving_path, source = 0, video_freq = 30, max_frames = 1800,
 
         if ret:
             if write_on_frame:
-                stringForImage =  string_format.format(counter, elapsed)
+                stringForImage =  string_fmt.format(counter, elapsed)
                 frame = cv2.putText(orig_frame, stringForImage, origin, font, fontScale, color, thickness, cv2.LINE_AA)
             else:
                 frame = orig_frame
@@ -274,7 +367,7 @@ def record_video(saving_path, source = 0, video_freq = 30, max_frames = 1800,
             if save_csv:
                 __utils__.write_row_csv(csv_raw, [counter, elapsed])
             if print_execution:
-                print(string_format.format(counter, elapsed))
+                print(string_fmt.format(counter, elapsed))
         # press esc to exit
         if cv2.waitKey(1) == 27:
             break
