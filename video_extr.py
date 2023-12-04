@@ -210,6 +210,7 @@ def save_frames_from_start_frame_to_end_frame(video_source_path_or_cap,
     video_dest_path : string (path to the folder)
         where to save the single frames
     start_frame : int, optional
+        if negative, takes the last (-)n frames
         by default 0
     end_frame : int, optional
         by default -1, corresponds to the last frame
@@ -222,6 +223,9 @@ def save_frames_from_start_frame_to_end_frame(video_source_path_or_cap,
     '''
     cap = general.get_cap(video_source_path_or_cap)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    
+    if start_frame < 0:
+        start_frame = total_frames+start_frame
 
     if end_frame == -1:
         end_frame = total_frames
