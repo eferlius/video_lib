@@ -68,8 +68,7 @@ def save_video_write_frame_num_and_time(video_source_path_or_cap, video_dest_pat
         if ret == True:
             if not video_writer_initialized:
                     h, w = frame.shape[:2]
-                    # fourcc = cv2.VideoWriter_fourcc('X','V','I','D')
-                    fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
+                    fourcc = general.get_correct_fourcc(os.path.splitext(video_dest_path)[1])
                     videoWriter = cv2.VideoWriter(video_dest_path, fourcc, fps, (w,h))
                     video_writer_initialized = True
             try:
@@ -126,8 +125,7 @@ def save_video_from_start_frame_to_end_frame(video_source_path_or_cap, video_des
         if ret == True:
             if not video_writer_initialized:
                     h, w = frame.shape[:2]
-                    # fourcc = cv2.VideoWriter_fourcc('X','V','I','D')
-                    fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
+                    fourcc = general.get_correct_fourcc(ext)
                     videoWriter = cv2.VideoWriter(video_dest_path, fourcc, fps, (w,h))
                     video_writer_initialized = True
             try:
@@ -183,8 +181,7 @@ def save_video_from_folder_of_frames(dir_complete_path, video_dest_path, fps,
             
         if not video_writer_initialized:
             h, w = frame.shape[:2]
-            # fourcc = cv2.VideoWriter_fourcc('X','V','I','D')
-            fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
+            fourcc = general.get_correct_fourcc(os.path.splitext(video_dest_path)[1])
             videoWriter = cv2.VideoWriter(video_dest_path, fourcc, fps, (w,h))
             video_writer_initialized = True
         try:
@@ -198,7 +195,7 @@ def save_video_from_folder_of_frames(dir_complete_path, video_dest_path, fps,
 
 def save_frames_from_start_frame_to_end_frame(video_source_path_or_cap, 
                                               folder_dest_path, start_frame = 0, 
-                                              end_frame = -1, string_fmt = None,
+                                              end_frame = -1, every_n_frames = 1, string_fmt = None,
                                               file_extension = '.png'):
     '''
     Save all the frames contained in a video in single images
@@ -214,6 +211,8 @@ def save_frames_from_start_frame_to_end_frame(video_source_path_or_cap,
         by default 0
     end_frame : int, optional
         by default -1, corresponds to the last frame
+    every_n_frames : int, optional
+        by default 1, corresponds to the number of frames skipped at every iteration
     string_fmt : string, optional
         how to format the string to create the name of each file.
         Should have a '{}' to insert the  frame number
@@ -226,6 +225,8 @@ def save_frames_from_start_frame_to_end_frame(video_source_path_or_cap,
     
     if start_frame < 0:
         start_frame = total_frames+start_frame
+    if end_frame < 0:
+        end_frame = total_frames+end_frame
 
     if end_frame == -1:
         end_frame = total_frames
@@ -235,18 +236,38 @@ def save_frames_from_start_frame_to_end_frame(video_source_path_or_cap,
         # take into account leading zeros
         string_fmt = 'f{'+':0{}'.format(len(str(end_frame)))+'d}'
 
-    for i in range(end_frame-start_frame):
-        ret, frame = cap.read()
-        if ret == True:
-            try: 
-                cv2.imwrite(os.path.join(folder_dest_path,string_fmt.format(i+start_frame)+file_extension), frame)
-            except:
-                print('error occurred in the loop at frame {}'.format(i+start_frame))
-                pass
-        else:
-            print('not recognized frame {}'.format(i+start_frame))
-            break
-    cap.release()
+    if every_n_frames < 84:
+        for i in range(end_frame-start_frame):
+            ret, frame = cap.read()
+            if i%every_n_frames != 0:
+                continue
+            if ret == True:
+                try: 
+                    cv2.imwrite(os.path.join(folder_dest_path,string_fmt.format(i+start_frame)+file_extension), frame)
+                except:
+                    print('error occurred in the loop at frame {}'.format(i+start_frame))
+                    pass
+            else:
+                print('not recognized frame {}'.format(i+start_frame))
+                break
+    else:
+        for i in range(end_frame-start_frame):
+            if i%every_n_frames != 0:
+                continue
+            else:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, i)
+                ret, frame = cap.read()
+                if ret == True:
+                    try: 
+                        cv2.imwrite(os.path.join(folder_dest_path,string_fmt.format(i+start_frame)+file_extension), frame)
+                    except:
+                        print('error occurred in the loop at frame {}'.format(i+start_frame))
+                        pass
+                else:
+                    print('not recognized frame {}'.format(i+start_frame))
+                    break
+
+    cap.release() 
 
 
 def get_frame_at_index(video_source_path_or_cap, frame_num):
@@ -331,8 +352,7 @@ def record_video(saving_folder, source = 0, video_freq = 30,
     capture = cv2.VideoCapture(source)
     frame_width = int(capture.get(3))
     frame_height = int(capture.get(4))
-    # fourcc = cv2.VideoWriter_fourcc('X','V','I','D')
-    fourcc = cv2.VideoWriter_fourcc('M','J','P','G') 
+    fourcc = general.get_correct_fourcc(ext)
 
     saving_path_folder = os.path.join(saving_folder,  __utils__.this_moment())
     os.makedirs(saving_path_folder, exist_ok = True)

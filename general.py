@@ -36,3 +36,14 @@ def get_cap(video_source_path_or_cap):
         return cap
     else:
         raise Exception("Input should be a cv2.VideoCsapture object or a path to a video")
+    
+def get_correct_fourcc(extension):
+    if extension.upper() == '.MP4':
+        return cv2.VideoWriter_fourcc('X','V','I','D')
+    elif extension.upper() == '.AVI':
+        return  cv2.VideoWriter_fourcc('M','J','P','G')
+    elif extension.upper() == '.MOV':
+        return  cv2.VideoWriter_fourcc('M','J','P','G')
+    else:
+        Exception('Not recognized extesion {}'.format(extension))
+        return None
