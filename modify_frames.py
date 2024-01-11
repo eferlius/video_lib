@@ -86,7 +86,7 @@ def save_video_color_pixels_write_on_frames(video_source_path_or_cap, video_dest
         if ret == True:
             if not video_writer_initialized:
                     h, w = frame.shape[:2]
-                    fourcc = cv2.VideoWriter_fourcc(general.get_correct_fourcc_string(os.path.splitext(video_dest_path)[1]))
+                    fourcc = general.get_correct_fourcc(os.path.splitext(video_dest_path)[1])
                     videoWriter = cv2.VideoWriter(video_dest_path, fourcc, fps, (w,h))
                     video_writer_initialized = True
             try:
